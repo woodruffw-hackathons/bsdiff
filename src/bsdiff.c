@@ -408,20 +408,28 @@ int main(int argc,char *argv[])
 				oldscore--;
 		}
 
-		if((len != oldscore) || (scan == newsize))
+		if ((len != oldscore) || (scan == newsize))
 		{
-			s=0;
-			Sf=0;
-			lenf=0;
-			
-			for(i=0;(lastscan+i<scan)&&(lastpos+i<oldsize);) {
-				if(old[lastpos+i]==new[lastscan+i]) s++;
+			s = 0;
+			Sf = 0;
+			lenf = 0;
+
+			for (i = 0; (lastscan + i < scan) && (lastpos + i < oldsize);)
+			{
+				if (old[lastpos + i] == new[lastscan + i])
+					s++;
+				
 				i++;
-				if(s*2-i>Sf*2-lenf) { Sf=s; lenf=i; }
+
+				if (s * 2 - i > Sf * 2 - lenf)
+				{
+					Sf = s;
+					lenf = i;
+				}
 			}
 
-			lenb=0;
-			if(scan<newsize) {
+			lenb = 0;
+			if(scan < newsize) {
 				s=0;Sb=0;
 				for(i=1;(scan>=lastscan+i)&&(pos>=i);i++) {
 					if(old[pos-i]==new[scan-i]) s++;
