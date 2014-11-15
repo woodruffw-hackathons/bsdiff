@@ -24,10 +24,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if 0
-__FBSDID("$FreeBSD: src/usr.bin/bsdiff/bspatch/bspatch.c,v 1.1 2005/08/06 01:59:06 cperciva Exp $");
-#endif
-
+#include <stdint.h>
 #include <bzlib.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -36,7 +33,7 @@ __FBSDID("$FreeBSD: src/usr.bin/bsdiff/bspatch/bspatch.c,v 1.1 2005/08/06 01:59:
 #include <unistd.h>
 #include <fcntl.h>
 
-static off_t offtin(u_char *buf)
+static off_t offtin(uint8_t *buf)
 {
 	off_t y;
 
@@ -62,8 +59,8 @@ int main(int argc,char * argv[])
 	int fd;
 	ssize_t oldsize,newsize;
 	ssize_t bzctrllen,bzdatalen;
-	u_char header[32],buf[8];
-	u_char *old, *new;
+	uint8_t header[32],buf[8];
+	uint8_t *old, *new;
 	off_t oldpos,newpos;
 	off_t ctrl[3];
 	off_t lenread;
