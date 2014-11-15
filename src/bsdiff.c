@@ -1,5 +1,6 @@
 /*-
  * Copyright 2003-2005 Colin Percival
+ * Changes 2014 William Woodruff (william @ tuffbizz.com)
  * All rights reserved
  *
  * Redistribution and use in source and binary forms, with or without
@@ -448,18 +449,18 @@ int main(int argc, char *argv[])
 			if (lastscan + lenf > scan - lenb)
 			{
 				overlap = (lastscan + lenf) - (scan - lenb);
-				s=0;
-				Ss=0;
-				lens=0;
-				for (i=0; i<overlap; i++)
+				s = 0;
+				Ss = 0;
+				lens = 0;
+				for (i = 0; i < overlap; i++)
 				{
 					if (new[lastscan + lenf - overlap + i] ==
-					   old[lastpos+lenf-overlap+i])
+					   old[lastpos + lenf - overlap + i])
 					{
 						s++;
 					}
 
-					if (new[scan - lenb + i] == old[pos-lenb+i]) 
+					if (new[scan - lenb + i] == old[pos - lenb + i]) 
 						s--;
 
 					if (s > Ss)

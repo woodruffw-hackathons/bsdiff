@@ -1,5 +1,6 @@
 /*-
  * Copyright 2003-2005 Colin Percival
+ * Changes 2014 William Woodruff (william @ tuffbizz.com)
  * All rights reserved
  *
  * Redistribution and use in source and binary forms, with or without
