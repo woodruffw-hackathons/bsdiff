@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 	off_t lenread;
 	off_t i;
 
-	if(argc != 4) errx(1, "usage: %s oldfile newfile patchfile", argv[0]);
+	if (argc != 4) errx(1, "usage: %s oldfile newfile patchfile", argv[0]);
 
 	/* Open patch file */
 	if ((f = fopen(argv[3], "r")) == NULL)
@@ -110,8 +110,8 @@ int main(int argc, char *argv[])
 	bzctrllen = offtin(header + 8);
 	bzdatalen = offtin(header + 16);
 	newsize = offtin(header + 24);
-	if((bzctrllen < 0) || (bzdatalen < 0) || (newsize < 0))
-		errx(1,"Corrupt patch\n");
+	if ((bzctrllen < 0) || (bzdatalen < 0) || (newsize < 0))
+		errx(1, "Corrupt patch\n");
 
 	/* Close patch file and re-open it via libbzip2 at the right places */
 	if (fclose(f))
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
 	if ((epfbz2 = BZ2_bzReadOpen(&ebz2err, epf, 0, 0, NULL, 0)) == NULL)
 		errx(1, "BZ2_bzReadOpen, bz2err = %d", ebz2err);
 
-	if(((fd = open(argv[1], O_RDONLY, 0)) < 0) ||
+	if (((fd = open(argv[1], O_RDONLY, 0)) < 0) ||
 		((oldsize = lseek(fd, 0, SEEK_END)) == -1) ||
 		((old = malloc(oldsize+1)) == NULL) ||
 		(lseek(fd, 0, SEEK_SET) != 0) ||
@@ -146,15 +146,15 @@ int main(int argc, char *argv[])
 		err(1,"%s",argv[1]);
 	}
 
-	if((new = malloc(newsize + 1)) == NULL)
+	if ((new = malloc(newsize + 1)) == NULL)
 		err(1,NULL);
 
 	oldpos = 0;
 	newpos = 0;
-	while(newpos < newsize)
+	while (newpos < newsize)
 	{
 		/* Read control data */
-		for(i = 0;i <= 2; i++)
+		for (i = 0;i <= 2; i++)
 		{
 			lenread = BZ2_bzRead(&cbz2err, cpfbz2, buf, 8);
 
@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
 		}
 
 		/* Sanity-check */
-		if(newpos + ctrl[0] > newsize)
+		if (newpos + ctrl[0] > newsize)
 			errx(1, "Corrupt patch\n");
 
 		/* Read diff string */
@@ -176,8 +176,8 @@ int main(int argc, char *argv[])
 			errx(1, "Corrupt patch\n");
 
 		/* Add old data to diff string */
-		for(i=0; i < ctrl[0]; i++)
-			if((oldpos + i >= 0) && (oldpos + i < oldsize))
+		for (i=0; i < ctrl[0]; i++)
+			if ((oldpos + i >= 0) && (oldpos + i < oldsize))
 				new[newpos + i] += old[oldpos + i];
 
 		/* Adjust pointers */
@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
 		oldpos += ctrl[0];
 
 		/* Sanity-check */
-		if(newpos + ctrl[1] > newsize)
+		if (newpos + ctrl[1] > newsize)
 			errx(1, "Corrupt patch\n");
 
 		/* Read extra string */
@@ -207,7 +207,7 @@ int main(int argc, char *argv[])
 		err(1, "fclose(%s)", argv[3]);
 
 	/* Write the new file */
-	if(((fd = open(argv[2], O_CREAT|O_TRUNC|O_WRONLY, 0666)) < 0) ||
+	if (((fd = open(argv[2], O_CREAT|O_TRUNC|O_WRONLY, 0666)) < 0) ||
 		(write(fd, new, newsize) != newsize) || (close(fd) == -1))
 		err(1,"%s",argv[2]);
 
