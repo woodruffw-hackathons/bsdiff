@@ -11,7 +11,7 @@ tests:
 	$(CC) $(CFLAGS) $(CPPFLAGS) ./src/tests/hw1.c -o ./bin/hw1
 	$(CC) $(CFLAGS) $(CPPFLAGS) ./src/tests/hw2.c -o ./bin/hw2
 
-difftest: tests
+difftest: all tests
 	./bin/bsdiff ./bin/hw1 ./bin/hw2 ./bin/hw2.bsdiff
 	./bin/bspatch ./bin/hw1 ./bin/hw1.patched ./bin/hw2.bsdiff
 	chmod +x ./bin/hw1.patched
