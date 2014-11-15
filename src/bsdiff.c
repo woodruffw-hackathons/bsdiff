@@ -39,100 +39,105 @@ static void split(off_t *I, off_t *V, off_t start, off_t len, off_t h)
 {
 	off_t i, j, k, x, tmp, jj, kk;
 
-	if(len<16)
+	if(len < 16)
 	{
-		for(k=start;k<start+len;k+=j)
+		for(k = start; k < (start + len); k += j)
 		{
-			j=1;x=V[I[k]+h];
+			j = 1;
+			x = V[I[k] + h];
 
-			for(i=1;k+i<start+len;i++)
+			for(i = 1; (k + i) < (start + len); i++)
 			{
-				if(V[I[k+i]+h]<x)
+				if(V[I[k + i] + h] < x)
 				{
-					x=V[I[k+i]+h];
-					j=0;
+					x = V[I[k + i] + h];
+					j = 0;
 				}
-				if(V[I[k+i]+h]==x)
+				if(V[I[k + i] + h] == x)
 				{
-					tmp=I[k+j];I[k+j]=I[k+i];I[k+i]=tmp;
+					tmp = I[k + j];
+					I[k + j] = I[k + i];
+					I[k + i] = tmp;
 					j++;
 				}
 			}
 
-			for(i=0;i<j;i++)
-				V[I[k+i]]=k+j-1;
-			if(j==1)
-				I[k]=-1;
+			for(i = 0; i < j; i++)
+				V[I[k + i]] = k + j - 1;
+			if(j == 1)
+				I[k] = -1;
 		}
+
 		return;
 	}
 
-	x=V[I[start+len/2]+h];
+	x=V[I[start + len / 2] + h];
 	jj=0;
 	kk=0;
 
-	for(i=start;i<start+len;i++)
+	for(i = start; i < start + len; i++)
 	{
-		if(V[I[i]+h]<x)
+		if(V[I[i] + h] < x)
 			jj++;
-		if(V[I[i]+h]==x)
+		if(V[I[i] + h] == x)
 			kk++;
 	}
 
-	jj+=start;
-	kk+=jj;
+	jj += start;
+	kk += jj;
 
-	i=start;
-	j=0;
-	k=0;
+	i = start;
+	j = 0;
+	k = 0;
 
-	while(i<jj)
+	while(i < jj)
 	{
-		if(V[I[i]+h]<x)
+		if(V[I[i] + h] < x)
 		{
 			i++;
 		} 
-		else if(V[I[i]+h]==x)
+		else if(V[I[i] + h] == x)
 		{
-			tmp=I[i];
-			I[i]=I[jj+j];
-			I[jj+j]=tmp;
+			tmp = I[i];
+			I[i] = I[jj + j];
+			I[jj + j] = tmp;
 			j++;
 		}
 		else
 		{
-			tmp=I[i];
-			I[i]=I[kk+k];
-			I[kk+k]=tmp;
+			tmp = I[i];
+			I[i] = I[kk + k];
+			I[kk+k] = tmp;
 			k++;
 		}
 	}
 
-	while(jj+j<kk)
+	while(jj + j < kk)
 	{
-		if(V[I[jj+j]+h]==x)
+		if(V[I[jj + j] + h] == x)
 		{
 			j++;
 		}
 		else
 		{
-			tmp=I[jj+j];
-			I[jj+j]=I[kk+k];
-			I[kk+k]=tmp;
+			tmp = I[jj + j];
+			I[jj + j] = I[kk + k];
+			I[kk + k] = tmp;
 			k++;
 		}
 	}
 
-	if(jj>start)
-		split(I,V,start,jj-start,h);
+	if(jj > start)
+		split(I, V, start, (jj-start), h);
 
-	for(i=0;i<kk-jj;i++)
-		V[I[jj+i]]=kk-1;
-	if(jj==kk-1)
-		I[jj]=-1;
+	for(i=0; i < (kk-jj); i++)
+		V[I[jj + i]] = kk - 1;
 
-	if(start+len>kk)
-		split(I,V,kk,start+len-kk,h);
+	if(jj == kk - 1)
+		I[jj] = - 1;
+
+	if(start + len > kk)
+		split(I, V, kk, start + len - kk, h);
 }
 
 static void qsufsort(off_t *I, off_t *V, uint8_t *old, off_t oldsize)
@@ -140,61 +145,62 @@ static void qsufsort(off_t *I, off_t *V, uint8_t *old, off_t oldsize)
 	off_t buckets[256];
 	off_t i, h, len;
 
-	for(i=0;i<256;i++)
-		buckets[i]=0;
-	for(i=0;i<oldsize;i++)
+	for(i = 0; i < 256; i++)
+		buckets[i] = 0;
+	for(i = 0;i < oldsize; i++)
 		buckets[old[i]]++;
-	for(i=1;i<256;i++)
-		buckets[i]+=buckets[i-1];
-	for(i=255;i>0;i--)
-		buckets[i]=buckets[i-1];
-	buckets[0]=0;
+	for(i = 1;i < 256; i++)
+		buckets[i] += buckets[i - 1];
+	for(i = 255; i > 0; i--)
+		buckets[i] = buckets[i - 1];
 
-	for(i=0;i<oldsize;i++)
-		I[++buckets[old[i]]]=i;
+	buckets[0] = 0;
 
-	I[0]=oldsize;
+	for(i = 0; i < oldsize; i++)
+		I[++buckets[old[i]]] = i;
 
-	for(i=0;i<oldsize;i++)
-		V[i]=buckets[old[i]];
+	I[0] = oldsize;
 
-	V[oldsize]=0;
+	for(i = 0; i < oldsize; i++)
+		V[i] = buckets[old[i]];
 
-	for(i=1;i<256;i++)
-		if(buckets[i]==buckets[i-1]+1)
-			I[buckets[i]]=-1;
+	V[oldsize] = 0;
 
-	I[0]=-1;
+	for(i = 1; i < 256; i++)
+		if(buckets[i] == buckets[i - 1] +1)
+			I[buckets[i]] = -1;
 
-	for(h=1;I[0]!=-(oldsize+1);h+=h)
+	I[0] = -1;
+
+	for(h = 1; I[0] != -(oldsize + 1); h += h)
 	{
-		len=0;
+		len = 0;
 
-		for(i=0;i<oldsize+1;)
+		for(i = 0; i < oldsize + 1;)
 		{
-			if(I[i]<0)
+			if(I[i] < 0)
 			{
-				len-=I[i];
-				i-=I[i];
+				len -= I[i];
+				i -= I[i];
 			}
 			else
 			{
 				if(len)
-					I[i-len]=-len;
+					I[i - len] = -len;
 
-				len=V[I[i]]+1-i;
-				split(I,V,i,len,h);
-				i+=len;
-				len=0;
+				len = V[I[i]] + 1 - i;
+				split(I, V, i, len, h);
+				i += len;
+				len = 0;
 			}
 		}
 
 		if(len)
-			I[i-len]=-len;
+			I[i - len] = -len;
 	}
 
-	for(i=0;i<oldsize+1;i++)
-		I[V[i]]=i;
+	for(i = 0; i < oldsize + 1; i++)
+		I[V[i]] = i;
 }
 
 static off_t matchlen(uint8_t *old, off_t oldsize, uint8_t *new, off_t newsize)
@@ -214,31 +220,31 @@ static off_t search(off_t *I, uint8_t *old, off_t oldsize,
 {
 	off_t x, y;
 
-	if((en - st) < 2)
+	if ((en - st) < 2)
 	{
-		x = matchlen(old+I[st],oldsize-I[st],new,newsize);
-		y = matchlen(old+I[en],oldsize-I[en],new,newsize);
+		x = matchlen(old + I[st], oldsize - I[st], new, newsize);
+		y = matchlen(old + I[en], oldsize - I[en], new, newsize);
 
-		if(x>y)
+		if(x > y)
 		{
-			*pos=I[st];
+			*pos = I[st];
 			return x;
 		}
 		else
 		{
-			*pos=I[en];
+			*pos = I[en];
 			return y;
 		}
 	}
 
-	x=st+(en-st)/2;
-	if(memcmp(old+I[x],new,MIN(oldsize-I[x],newsize))<0)
+	x = st + (en - st) / 2;
+	if (memcmp(old + I[x], new, MIN(oldsize - I[x], newsize)) < 0)
 	{
-		return search(I,old,oldsize,new,newsize,x,en,pos);
+		return search(I, old, oldsize, new, newsize, x, en, pos);
 	}
 	else
 	{
-		return search(I,old,oldsize,new,newsize,st,x,pos);
+		return search(I, old, oldsize, new, newsize, st, x, pos);
 	}
 }
 
@@ -282,52 +288,65 @@ static void offtout(off_t x, uint8_t *buf)
 int main(int argc,char *argv[])
 {
 	int fd;
-	uint8_t *old,*new;
-	off_t oldsize,newsize;
-	off_t *I,*V;
-	off_t scan,pos,len;
-	off_t lastscan,lastpos,lastoffset;
-	off_t oldscore,scsc;
-	off_t s,Sf,lenf,Sb,lenb;
-	off_t overlap,Ss,lens;
+	uint8_t *old, *new;
+	off_t oldsize, newsize;
+	off_t *I, *V;
+	off_t scan, pos, len;
+	off_t lastscan, lastpos, lastoffset;
+	off_t oldscore, scsc;
+	off_t s, Sf, lenf, Sb, lenb;
+	off_t overlap, Ss, lens;
 	off_t i;
-	off_t dblen,eblen;
-	uint8_t *db,*eb;
+	off_t dblen, eblen;
+	uint8_t *db, *eb;
 	uint8_t buf[8];
 	uint8_t header[32];
 	FILE *pf;
 	BZFILE *pfbz2;
 	int bz2err;
 
-	if(argc!=4) errx(1,"usage: %s oldfile newfile patchfile\n",argv[0]);
+	if(argc != 4) errx(1, "usage: %s oldfile newfile patchfile\n", argv[0]);
 
 	/* Allocate oldsize+1 bytes instead of oldsize bytes to ensure
 		that we never try to malloc(0) and get a NULL pointer */
-	if(((fd=open(argv[1],O_RDONLY,0))<0) ||
-		((oldsize=lseek(fd,0,SEEK_END))==-1) ||
-		((old=malloc(oldsize+1))==NULL) ||
-		(lseek(fd,0,SEEK_SET)!=0) ||
-		(read(fd,old,oldsize)!=oldsize) ||
-		(close(fd)==-1)) err(1,"%s",argv[1]);
+	if(((fd = open(argv[1], O_RDONLY, 0)) < 0) ||
+		((oldsize = lseek(fd, 0, SEEK_END)) == -1) ||
+		((old = malloc(oldsize + 1)) == NULL) ||
+		(lseek(fd, 0, SEEK_SET) != 0) ||
+		(read(fd, old, oldsize) != oldsize) ||
+		(close(fd) == -1))
+	{
+		err(1, "%s", argv[1]);
+	}
 
-	if(((I=malloc((oldsize+1)*sizeof(off_t)))==NULL) ||
-		((V=malloc((oldsize+1)*sizeof(off_t)))==NULL)) err(1,NULL);
+	if(((I = malloc((oldsize + 1) * sizeof(off_t))) == NULL) ||
+		((V = malloc((oldsize + 1) * sizeof(off_t))) == NULL))
+	{
+		err(1,NULL);
+	}
 
-	qsufsort(I,V,old,oldsize);
+	qsufsort(I, V, old, oldsize);
 
 	free(V);
 
 	/* Allocate newsize+1 bytes instead of newsize bytes to ensure
 		that we never try to malloc(0) and get a NULL pointer */
-	if(((fd=open(argv[2],O_RDONLY,0))<0) ||
-		((newsize=lseek(fd,0,SEEK_END))==-1) ||
-		((new=malloc(newsize+1))==NULL) ||
-		(lseek(fd,0,SEEK_SET)!=0) ||
-		(read(fd,new,newsize)!=newsize) ||
-		(close(fd)==-1)) err(1,"%s",argv[2]);
+	if(((fd = open(argv[2], O_RDONLY, 0)) < 0) ||
+		((newsize = lseek(fd, 0, SEEK_END)) == -1) ||
+		((new = malloc(newsize + 1)) == NULL) ||
+		(lseek(fd, 0, SEEK_SET) !=0 ) ||
+		(read(fd, new, newsize) != newsize) ||
+		(close(fd) == -1))
+	{
+		err(1, "%s", argv[2]);
+	}
 
-	if(((db=malloc(newsize+1))==NULL) ||
-		((eb=malloc(newsize+1))==NULL)) err(1,NULL);
+	if(((db = malloc(newsize + 1)) == NULL) ||
+		((eb = malloc(newsize + 1)) == NULL))
+	{
+		err(1, NULL);
+	}
+		
 	dblen=0;
 	eblen=0;
 
@@ -345,40 +364,56 @@ int main(int argc,char *argv[])
 		32	??	Bzip2ed ctrl block
 		??	??	Bzip2ed diff block
 		??	??	Bzip2ed extra block */
-	memcpy(header,"BSDIFF40",8);
+	memcpy(header, "BSDIFF40", 8);
 	offtout(0, header + 8);
 	offtout(0, header + 16);
 	offtout(newsize, header + 24);
+
 	if (fwrite(header, 32, 1, pf) != 1)
 		err(1, "fwrite(%s)", argv[3]);
 
 	/* Compute the differences, writing ctrl as we go */
 	if ((pfbz2 = BZ2_bzWriteOpen(&bz2err, pf, 9, 0, 0)) == NULL)
 		errx(1, "BZ2_bzWriteOpen, bz2err = %d", bz2err);
-	scan=0;len=0;
-	lastscan=0;lastpos=0;lastoffset=0;
-	while(scan<newsize) {
-		oldscore=0;
 
-		for(scsc=scan+=len;scan<newsize;scan++) {
-			len=search(I,old,oldsize,new+scan,newsize-scan,
-					0,oldsize,&pos);
+	scan=0;
+	len=0;
+	lastscan=0;
+	lastpos=0;
+	lastoffset=0;
+	
+	while(scan<newsize)
+	{
+		oldscore = 0;
 
-			for(;scsc<scan+len;scsc++)
-			if((scsc+lastoffset<oldsize) &&
-				(old[scsc+lastoffset] == new[scsc]))
-				oldscore++;
+		for(scsc = (scan += len); scan < newsize; scan++)
+		{
+			len = search(I, old, oldsize, new+scan, newsize-scan, 0, oldsize, &pos);
 
-			if(((len==oldscore) && (len!=0)) || 
-				(len>oldscore+8)) break;
+			for(; scsc < scan+len; scsc++)
+			{
+				if((scsc + lastoffset < oldsize) &&
+				(old[scsc + lastoffset] == new[scsc]))
+				{
+					oldscore++;
+				}
+			}
 
-			if((scan+lastoffset<oldsize) &&
-				(old[scan+lastoffset] == new[scan]))
+			if(((len == oldscore) && (len != 0)) || 
+				(len > oldscore + 8))
+				break;
+
+			if((scan + lastoffset < oldsize) &&
+				(old[scan + lastoffset] == new[scan]))
 				oldscore--;
 		}
 
-		if((len!=oldscore) || (scan==newsize)) {
-			s=0;Sf=0;lenf=0;
+		if((len != oldscore) || (scan == newsize))
+		{
+			s=0;
+			Sf=0;
+			lenf=0;
+			
 			for(i=0;(lastscan+i<scan)&&(lastpos+i<oldsize);) {
 				if(old[lastpos+i]==new[lastscan+i]) s++;
 				i++;
