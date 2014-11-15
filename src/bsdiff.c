@@ -305,11 +305,11 @@ int main(int argc, char *argv[])
 	BZFILE *pfbz2;
 	int bz2err;
 
-	if(argc != 4) errx(1, "usage: %s oldfile newfile patchfile\n", argv[0]);
+	if (argc != 4) errx(1, "usage: %s oldfile newfile patchfile\n", argv[0]);
 
 	/* Allocate oldsize+1 bytes instead of oldsize bytes to ensure
 		that we never try to malloc(0) and get a NULL pointer */
-	if(((fd = open(argv[1], O_RDONLY, 0)) < 0) ||
+	if (((fd = open(argv[1], O_RDONLY, 0)) < 0) ||
 		((oldsize = lseek(fd, 0, SEEK_END)) == -1) ||
 		((old = malloc(oldsize + 1)) == NULL) ||
 		(lseek(fd, 0, SEEK_SET) != 0) ||
@@ -319,7 +319,7 @@ int main(int argc, char *argv[])
 		err(1, "%s", argv[1]);
 	}
 
-	if(((I = malloc((oldsize + 1) * sizeof(off_t))) == NULL) ||
+	if (((I = malloc((oldsize + 1) * sizeof(off_t))) == NULL) ||
 		((V = malloc((oldsize + 1) * sizeof(off_t))) == NULL))
 	{
 		err(1,NULL);
@@ -331,7 +331,7 @@ int main(int argc, char *argv[])
 
 	/* Allocate newsize+1 bytes instead of newsize bytes to ensure
 		that we never try to malloc(0) and get a NULL pointer */
-	if(((fd = open(argv[2], O_RDONLY, 0)) < 0) ||
+	if (((fd = open(argv[2], O_RDONLY, 0)) < 0) ||
 		((newsize = lseek(fd, 0, SEEK_END)) == -1) ||
 		((new = malloc(newsize + 1)) == NULL) ||
 		(lseek(fd, 0, SEEK_SET) !=0 ) ||
@@ -341,7 +341,7 @@ int main(int argc, char *argv[])
 		err(1, "%s", argv[2]);
 	}
 
-	if(((db = malloc(newsize + 1)) == NULL) ||
+	if (((db = malloc(newsize + 1)) == NULL) ||
 		((eb = malloc(newsize + 1)) == NULL))
 	{
 		err(1, NULL);
@@ -382,28 +382,28 @@ int main(int argc, char *argv[])
 	lastpos=0;
 	lastoffset=0;
 	
-	while(scan<newsize)
+	while (scan < newsize)
 	{
 		oldscore = 0;
 
-		for(scsc = (scan += len); scan < newsize; scan++)
+		for (scsc = (scan += len); scan < newsize; scan++)
 		{
 			len = search(I, old, oldsize, new+scan, newsize-scan, 0, oldsize, &pos);
 
-			for(; scsc < scan+len; scsc++)
+			for (; scsc < scan+len; scsc++)
 			{
-				if((scsc + lastoffset < oldsize) &&
+				if ((scsc + lastoffset < oldsize) &&
 				(old[scsc + lastoffset] == new[scsc]))
 				{
 					oldscore++;
 				}
 			}
 
-			if(((len == oldscore) && (len != 0)) || 
+			if (((len == oldscore) && (len != 0)) || 
 				(len > oldscore + 8))
 				break;
 
-			if((scan + lastoffset < oldsize) &&
+			if ((scan + lastoffset < oldsize) &&
 				(old[scan + lastoffset] == new[scan]))
 				oldscore--;
 		}
@@ -429,55 +429,76 @@ int main(int argc, char *argv[])
 			}
 
 			lenb = 0;
-			if(scan < newsize) {
-				s=0;Sb=0;
-				for(i=1;(scan>=lastscan+i)&&(pos>=i);i++) {
-					if(old[pos-i]==new[scan-i]) s++;
-					if(s*2-i>Sb*2-lenb) { Sb=s; lenb=i; }
+			if (scan < newsize) {
+				s=0;
+				Sb=0;
+				
+				for (i=1; (scan >= lastscan + i) && (pos >= i); i++)
+				{
+					if (old[pos - i] == new[scan - i])
+						s++;
+					if (s * 2 - i > Sb * 2 - lenb)
+					{
+						Sb = s;
+						lenb = i; 
+					}
 				}
 			}
 
-			if(lastscan+lenf>scan-lenb) {
-				overlap=(lastscan+lenf)-(scan-lenb);
-				s=0;Ss=0;lens=0;
-				for(i=0;i<overlap;i++) {
-					if(new[lastscan+lenf-overlap+i]==
-					   old[lastpos+lenf-overlap+i]) s++;
-					if(new[scan-lenb+i]==
-					   old[pos-lenb+i]) s--;
-					if(s>Ss) { Ss=s; lens=i+1; }
+			if (lastscan + lenf > scan - lenb)
+			{
+				overlap = (lastscan + lenf) - (scan - lenb);
+				s=0;
+				Ss=0;
+				lens=0;
+				for (i=0; i<overlap; i++)
+				{
+					if (new[lastscan + lenf - overlap + i] ==
+					   old[lastpos+lenf-overlap+i])
+					{
+						s++;
+					}
+
+					if (new[scan - lenb + i] == old[pos-lenb+i]) 
+						s--;
+
+					if(s > Ss)
+					{
+						Ss = s;
+						lens = i + 1;
+					}
 				}
 
-				lenf+=lens-overlap;
-				lenb-=lens;
+				lenf += lens - overlap;
+				lenb -= lens;
 			}
 
-			for(i=0;i<lenf;i++)
-				db[dblen+i]=new[lastscan+i]-old[lastpos+i];
-			for(i=0;i<(scan-lenb)-(lastscan+lenf);i++)
-				eb[eblen+i]=new[lastscan+lenf+i];
+			for(i = 0; i < lenf; i++)
+				db[dblen + i] = new[lastscan + i] - old[lastpos + i];
+			for(i = 0; i < (scan - lenb) - (lastscan + lenf); i++)
+				eb[eblen + i] = new[lastscan + lenf + i];
 
-			dblen+=lenf;
-			eblen+=(scan-lenb)-(lastscan+lenf);
+			dblen += lenf;
+			eblen += (scan - lenb) - (lastscan + lenf);
 
-			offtout(lenf,buf);
+			offtout(lenf, buf);
 			BZ2_bzWrite(&bz2err, pfbz2, buf, 8);
 			if (bz2err != BZ_OK)
 				errx(1, "BZ2_bzWrite, bz2err = %d", bz2err);
 
-			offtout((scan-lenb)-(lastscan+lenf),buf);
+			offtout((scan - lenb) - (lastscan + lenf), buf);
 			BZ2_bzWrite(&bz2err, pfbz2, buf, 8);
 			if (bz2err != BZ_OK)
 				errx(1, "BZ2_bzWrite, bz2err = %d", bz2err);
 
-			offtout((pos-lenb)-(lastpos+lenf),buf);
+			offtout((pos - lenb) - (lastpos + lenf), buf);
 			BZ2_bzWrite(&bz2err, pfbz2, buf, 8);
 			if (bz2err != BZ_OK)
 				errx(1, "BZ2_bzWrite, bz2err = %d", bz2err);
 
-			lastscan=scan-lenb;
-			lastpos=pos-lenb;
-			lastoffset=pos-scan;
+			lastscan = scan - lenb;
+			lastpos = pos - lenb;
+			lastoffset = pos - scan;
 		}
 	}
 	BZ2_bzWriteClose(&bz2err, pfbz2, 0, NULL, NULL);
@@ -487,7 +508,7 @@ int main(int argc, char *argv[])
 	/* Compute size of compressed ctrl data */
 	if ((len = ftello(pf)) == -1)
 		err(1, "ftello");
-	offtout(len-32, header + 8);
+	offtout(len - 32, header + 8);
 
 	/* Write compressed diff data */
 	if ((pfbz2 = BZ2_bzWriteOpen(&bz2err, pf, 9, 0, 0)) == NULL)
