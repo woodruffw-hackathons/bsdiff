@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
 
 	/*
 	File format:
-		0	8	"BSDIFF40"
+		0	8	"BSDIFFXX"
 		8	8	X
 		16	8	Y
 		24	8	sizeof(newfile)
@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* Check for appropriate magic */
-	if (memcmp(header, "BSDIFF40", 8) != 0)
+	if (memcmp(header, "BSDIFFXX", 8) != 0)
 	{
 		fprintf(stderr, "Corrupt patch\n");
 		exit(1);

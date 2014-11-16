@@ -364,7 +364,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* Header is
-		0	8	 "BSDIFF40"
+		0	8	 "BSDIFFXX"
 		8	8	length of bzip2ed ctrl block
 		16	8	length of bzip2ed diff block
 		24	8	length of new file */
@@ -373,7 +373,7 @@ int main(int argc, char *argv[])
 		32	??	Bzip2ed ctrl block
 		??	??	Bzip2ed diff block
 		??	??	Bzip2ed extra block */
-	memcpy(header, "BSDIFF40", 8);
+	memcpy(header, "BSDIFFXX", 8);
 	offtout(0, header + 8);
 	offtout(0, header + 16);
 	offtout(newsize, header + 24);
