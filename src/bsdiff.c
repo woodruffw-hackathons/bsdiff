@@ -308,7 +308,7 @@ int main(int argc, char *argv[])
 	if (argc != 4)
 	{
 		fprintf(stderr, "Usage: %s oldfile newfile patchfile\n", argv[0]);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	/* Allocate oldsize+1 bytes instead of oldsize bytes to ensure
@@ -321,13 +321,13 @@ int main(int argc, char *argv[])
 		(close(fd) == -1))
 	{
 		fprintf(stderr, "%s\n", argv[1]);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	if (((I = malloc((oldsize + 1) * sizeof(off_t))) == NULL) ||
 		((V = malloc((oldsize + 1) * sizeof(off_t))) == NULL))
 	{
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	qsufsort(I, V, old, oldsize);
@@ -344,13 +344,13 @@ int main(int argc, char *argv[])
 		(close(fd) == -1))
 	{
 		fprintf(stderr, "%s\n", argv[2]);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	if (((db = malloc(newsize + 1)) == NULL) ||
 		((eb = malloc(newsize + 1)) == NULL))
 	{
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 		
 	dblen=0;
@@ -360,7 +360,7 @@ int main(int argc, char *argv[])
 	if ((pf = fopen(argv[3], "w")) == NULL)
 	{
 		fprintf(stderr, "%s\n", argv[3]);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	/* Header is
@@ -381,14 +381,14 @@ int main(int argc, char *argv[])
 	if (fwrite(header, 32, 1, pf) != 1)
 	{
 		fprintf(stderr, "fwrite(%s)\n", argv[3]);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	/* Compute the differences, writing ctrl as we go */
 	if ((pfbz2 = BZ2_bzWriteOpen(&bz2err, pf, 9, 0, 0)) == NULL)
 	{
 		fprintf(stderr, "BZ2_bzWriteOpen, bz2err = %d\n", bz2err);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	scan = 0;
@@ -502,7 +502,7 @@ int main(int argc, char *argv[])
 			if (bz2err != BZ_OK)
 			{
 				fprintf(stderr, "BZ2_bzWrite, bz2err = %d\n", bz2err);
-				exit(1);
+				exit(EXIT_FAILURE);
 			}
 
 			offtout((scan - lenb) - (lastscan + lenf), buf);
@@ -511,7 +511,7 @@ int main(int argc, char *argv[])
 			if (bz2err != BZ_OK)
 			{
 				fprintf(stderr, "BZ2_bzWrite, bz2err = %d\n", bz2err);
-				exit(1);
+				exit(EXIT_FAILURE);
 			}
 
 			offtout((pos - lenb) - (lastpos + lenf), buf);
@@ -520,7 +520,7 @@ int main(int argc, char *argv[])
 			if (bz2err != BZ_OK)
 			{
 				fprintf(stderr, "BZ2_bzWrite, bz2err = %d\n", bz2err);
-				exit(1);
+				exit(EXIT_FAILURE);
 			}
 
 			lastscan = scan - lenb;
@@ -534,14 +534,14 @@ int main(int argc, char *argv[])
 	if (bz2err != BZ_OK)
 	{
 		fprintf(stderr, "BZ2_bzWriteClose, bz2err = %d\n", bz2err);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	/* Compute size of compressed ctrl data */
 	if ((len = ftello(pf)) == -1)
 	{
 		fprintf(stderr, "ftello\n");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	offtout(len - 32, header + 8);
@@ -550,7 +550,7 @@ int main(int argc, char *argv[])
 	if ((pfbz2 = BZ2_bzWriteOpen(&bz2err, pf, 9, 0, 0)) == NULL)
 	{
 		fprintf(stderr, "BZ2_bzWriteOpen, bz2err = %d\n", bz2err);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	BZ2_bzWrite(&bz2err, pfbz2, db, dblen);
@@ -558,7 +558,7 @@ int main(int argc, char *argv[])
 	if (bz2err != BZ_OK)
 	{
 		fprintf(stderr, "BZ2_bzWrite, bz2err = %d\n", bz2err);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	BZ2_bzWriteClose(&bz2err, pfbz2, 0, NULL, NULL);
@@ -566,14 +566,14 @@ int main(int argc, char *argv[])
 	if (bz2err != BZ_OK)
 	{
 		fprintf(stderr, "BZ2_bzWriteClose, bz2err = %d\n", bz2err);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	/* Compute size of compressed diff data */
 	if ((newsize = ftello(pf)) == -1)
 	{
 		fprintf(stderr, "ftello\n");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	
 	offtout(newsize - len, header + 16);
@@ -582,7 +582,7 @@ int main(int argc, char *argv[])
 	if ((pfbz2 = BZ2_bzWriteOpen(&bz2err, pf, 9, 0, 0)) == NULL)
 	{
 		fprintf(stderr, "BZ2_bzWriteOpen, bz2err = %d\n", bz2err);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	BZ2_bzWrite(&bz2err, pfbz2, eb, eblen);
@@ -590,7 +590,7 @@ int main(int argc, char *argv[])
 	if (bz2err != BZ_OK)
 	{
 		fprintf(stderr, "BZ2_bzWrite, bz2err=%d\n", bz2err);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	BZ2_bzWriteClose(&bz2err, pfbz2, 0, NULL, NULL);
@@ -598,26 +598,26 @@ int main(int argc, char *argv[])
 	if (bz2err != BZ_OK)
 	{
 		fprintf(stderr, "BZ2_bzWriteClose, bz2err = %d\n", bz2err);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	/* Seek to the beginning, write the header, and close the file */
 	if (fseeko(pf, 0, SEEK_SET))
 	{
 		fprintf(stderr, "fseeko\n");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	if (fwrite(header, 32, 1, pf) != 1)
 	{
 		fprintf(stderr, "fwrite(%s)\n", argv[3]);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	if (fclose(pf))
 	{
 		fprintf(stderr, "fclose\n");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	/* Free the memory we used */
@@ -627,5 +627,5 @@ int main(int argc, char *argv[])
 	free(old);
 	free(new);
 
-	return 0;
+	return EXIT_SUCCESS;
 }

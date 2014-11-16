@@ -77,14 +77,14 @@ int main(int argc, char *argv[])
 	if (argc != 4)
 	{
 		fprintf(stderr, "Usage: %s oldfile newfile patchfile\n", argv[0]);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	/* Open patch file */
 	if ((f = fopen(argv[3], "r")) == NULL)
 	{
 		fprintf(stderr, "fopen(%s)\n", argv[3]);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	/*
@@ -107,18 +107,18 @@ int main(int argc, char *argv[])
 		if (feof(f))
 		{
 			fprintf(stderr, "Corrupt patch\n");
-			exit(1);
+			exit(EXIT_FAILURE);
 		}
 		
 		fprintf(stderr, "fread(%s)\n", argv[3]);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	/* Check for appropriate magic */
 	if (memcmp(header, "BSDIFFXX", 8) != 0)
 	{
 		fprintf(stderr, "Corrupt patch\n");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	/* Read lengths from header */
@@ -128,68 +128,68 @@ int main(int argc, char *argv[])
 	if ((bzctrllen < 0) || (bzdatalen < 0) || (newsize < 0))
 	{
 		fprintf(stderr, "Corrupt patch\n");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	/* Close patch file and re-open it via libbzip2 at the right places */
 	if (fclose(f))
 	{
 		fprintf(stderr, "fclose(%s)\n", argv[3]);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	if ((cpf = fopen(argv[3], "r")) == NULL)
 	{
 		fprintf(stderr, "fopen(%s)\n", argv[3]);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	if (fseeko(cpf, 32, SEEK_SET))
 	{
 		fprintf(stderr, "fseeko(%s, %d)\n", argv[3], 32);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	if ((cpfbz2 = BZ2_bzReadOpen(&cbz2err, cpf, 0, 0, NULL, 0)) == NULL)
 	{
 		fprintf(stderr, "BZ2_bzReadOpen, bz2err = %d\n", cbz2err);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	if ((dpf = fopen(argv[3], "r")) == NULL)
 	{
 		fprintf(stderr, "fopen(%s)\n", argv[3]);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	if (fseeko(dpf, 32 + bzctrllen, SEEK_SET))
 	{
 		fprintf(stderr, "fseeko(%s, %lld)\n", argv[3], (long long) (32 + bzctrllen));
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	if ((dpfbz2 = BZ2_bzReadOpen(&dbz2err, dpf, 0, 0, NULL, 0)) == NULL)
 	{
 		fprintf(stderr, "BZ2_bzReadOpen, bz2err = %d\n", dbz2err);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	if ((epf = fopen(argv[3], "r")) == NULL)
 	{
 		fprintf(stderr, "fopen(%s)\n", argv[3]);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	if (fseeko(epf, 32 + bzctrllen + bzdatalen, SEEK_SET))
 	{
 		fprintf(stderr, "fseeko(%s, %lld)\n", argv[3], (long long) (32 + bzctrllen + bzdatalen));
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	
 	if ((epfbz2 = BZ2_bzReadOpen(&ebz2err, epf, 0, 0, NULL, 0)) == NULL)
 	{
 		fprintf(stderr, "BZ2_bzReadOpen, bz2err = %d\n", ebz2err);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	if (((fd = open(argv[1], O_RDONLY, 0)) < 0) ||
@@ -200,11 +200,11 @@ int main(int argc, char *argv[])
 		(close(fd) == -1))
 	{
 		fprintf(stderr, "%s\n", argv[1]);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	if ((new = malloc(newsize + 1)) == NULL)
-		exit(1);
+		exit(EXIT_FAILURE);
 
 	oldpos = 0;
 	newpos = 0;
@@ -219,7 +219,7 @@ int main(int argc, char *argv[])
 			    (cbz2err != BZ_STREAM_END)))
 			{
 				fprintf(stderr, "Corrupt patch\n");
-				exit(1);
+				exit(EXIT_FAILURE);
 			}
 
 			ctrl[i]=offtin(buf);
@@ -229,7 +229,7 @@ int main(int argc, char *argv[])
 		if (newpos + ctrl[0] > newsize)
 		{
 			fprintf(stderr, "Corrupt patch\n");
-			exit(1);
+			exit(EXIT_FAILURE);
 		}
 
 		/* Read diff string */
@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
 		    ((dbz2err != BZ_OK) && (dbz2err != BZ_STREAM_END)))
 		{
 			fprintf(stderr, "Corrupt patch\n");
-			exit(1);
+			exit(EXIT_FAILURE);
 		}
 
 		/* Add old data to diff string */
@@ -254,7 +254,7 @@ int main(int argc, char *argv[])
 		if (newpos + ctrl[1] > newsize)
 		{
 			fprintf(stderr, "Corrupt patch\n");
-			exit(1);
+			exit(EXIT_FAILURE);
 		}
 
 		/* Read extra string */
@@ -263,7 +263,7 @@ int main(int argc, char *argv[])
 		    ((ebz2err != BZ_OK) && (ebz2err != BZ_STREAM_END)))
 		{
 			fprintf(stderr, "Corrupt patch\n");
-			exit(1);
+			exit(EXIT_FAILURE);
 		}
 
 		/* Adjust pointers */
@@ -278,7 +278,7 @@ int main(int argc, char *argv[])
 	if (fclose(cpf) || fclose(dpf) || fclose(epf))
 	{
 		fprintf(stderr, "fclose(%s)\n", argv[3]);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	/* Write the new file */
@@ -286,11 +286,11 @@ int main(int argc, char *argv[])
 		(write(fd, new, newsize) != newsize) || (close(fd) == -1))
 	{
 		fprintf(stderr, "%s\n", argv[2]);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	free(new);
 	free(old);
 
-	return 0;
+	return EXIT_SUCCESS;
 }
