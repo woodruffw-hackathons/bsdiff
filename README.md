@@ -10,3 +10,4 @@ Like the original `bsdiff`, this fork relies on bzip2 to compress its diffs.
 * Replaced unportable `u_char` declarations with `uint8_t` types.
 * Simplified the makefile.
 * Fixed formatting.
+* Replaced BSD-style `err` functions with `fprintf()`/`exit()` combinations.
