@@ -30,7 +30,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <err.h>
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -39,19 +38,19 @@ static off_t offtin(uint8_t *buf)
 	off_t y;
 
 	y = buf[7] & 0x7F;
-	y = y*256;
+	y = y * 256;
 	y += buf[6];
-	y = y*256;
+	y = y * 256;
 	y += buf[5];
-	y = y*256;
+	y = y * 256;
 	y += buf[4];
-	y = y*256;
+	y = y * 256;
 	y += buf[3];
-	y = y*256;
+	y = y * 256;
 	y += buf[2];
-	y = y*256;
+	y = y * 256;
 	y += buf[1];
-	y = y*256;
+	y = y * 256;
 	y += buf[0];
 
 	if (buf[7] & 0x80)
@@ -75,11 +74,18 @@ int main(int argc, char *argv[])
 	off_t lenread;
 	off_t i;
 
-	if (argc != 4) errx(1, "usage: %s oldfile newfile patchfile", argv[0]);
+	if (argc != 4)
+	{
+		fprintf(stderr, "Usage: %s oldfile newfile patchfile\n", argv[0]);
+		exit(1);
+	}
 
 	/* Open patch file */
 	if ((f = fopen(argv[3], "r")) == NULL)
-		err(1, "fopen(%s)", argv[3]);
+	{
+		fprintf(stderr, "fopen(%s)\n", argv[3]);
+		exit(1);
+	}
 
 	/*
 	File format:
@@ -99,43 +105,92 @@ int main(int argc, char *argv[])
 	if (fread(header, 1, 32, f) < 32)
 	{
 		if (feof(f))
-			errx(1, "Corrupt patch\n");
-		err(1, "fread(%s)", argv[3]);
+		{
+			fprintf(stderr, "Corrupt patch\n");
+			exit(1);
+		}
+		
+		fprintf(stderr, "fread(%s)\n", argv[3]);
+		exit(1);
 	}
 
 	/* Check for appropriate magic */
 	if (memcmp(header, "BSDIFF40", 8) != 0)
-		errx(1, "Corrupt patch\n");
+	{
+		fprintf(stderr, "Corrupt patch\n");
+		exit(1);
+	}
 
 	/* Read lengths from header */
 	bzctrllen = offtin(header + 8);
 	bzdatalen = offtin(header + 16);
 	newsize = offtin(header + 24);
 	if ((bzctrllen < 0) || (bzdatalen < 0) || (newsize < 0))
-		errx(1, "Corrupt patch\n");
+	{
+		fprintf(stderr, "Corrupt patch\n");
+		exit(1);
+	}
 
 	/* Close patch file and re-open it via libbzip2 at the right places */
 	if (fclose(f))
-		err(1, "fclose(%s)", argv[3]);
+	{
+		fprintf(stderr, "fclose(%s)\n", argv[3]);
+		exit(1);
+	}
+
 	if ((cpf = fopen(argv[3], "r")) == NULL)
-		err(1, "fopen(%s)", argv[3]);
+	{
+		fprintf(stderr, "fopen(%s)\n", argv[3]);
+		exit(1);
+	}
+
 	if (fseeko(cpf, 32, SEEK_SET))
-		err(1, "fseeko(%s, %lld)", argv[3], (long long) 32);
+	{
+		fprintf(stderr, "fseeko(%s, %d)\n", argv[3], 32);
+		exit(1);
+	}
+
 	if ((cpfbz2 = BZ2_bzReadOpen(&cbz2err, cpf, 0, 0, NULL, 0)) == NULL)
-		errx(1, "BZ2_bzReadOpen, bz2err = %d", cbz2err);
+	{
+		fprintf(stderr, "BZ2_bzReadOpen, bz2err = %d\n", cbz2err);
+		exit(1);
+	}
+
 	if ((dpf = fopen(argv[3], "r")) == NULL)
-		err(1, "fopen(%s)", argv[3]);
+	{
+		fprintf(stderr, "fopen(%s)\n", argv[3]);
+		exit(1);
+	}
+
 	if (fseeko(dpf, 32 + bzctrllen, SEEK_SET))
-		err(1, "fseeko(%s, %lld)", argv[3], (long long)(32 + bzctrllen));
+	{
+		fprintf(stderr, "fseeko(%s, %lld)\n", argv[3], (long long) (32 + bzctrllen));
+		exit(1);
+	}
+
 	if ((dpfbz2 = BZ2_bzReadOpen(&dbz2err, dpf, 0, 0, NULL, 0)) == NULL)
-		errx(1, "BZ2_bzReadOpen, bz2err = %d", dbz2err);
+	{
+		fprintf(stderr, "BZ2_bzReadOpen, bz2err = %d\n", dbz2err);
+		exit(1);
+	}
+
 	if ((epf = fopen(argv[3], "r")) == NULL)
-		err(1, "fopen(%s)", argv[3]);
+	{
+		fprintf(stderr, "fopen(%s)\n", argv[3]);
+		exit(1);
+	}
+
 	if (fseeko(epf, 32 + bzctrllen + bzdatalen, SEEK_SET))
-		err(1, "fseeko(%s, %lld)", argv[3],
-		    (long long)(32 + bzctrllen + bzdatalen));
+	{
+		fprintf(stderr, "fseeko(%s, %lld)\n", argv[3], (long long) (32 + bzctrllen + bzdatalen));
+		exit(1);
+	}
+	
 	if ((epfbz2 = BZ2_bzReadOpen(&ebz2err, epf, 0, 0, NULL, 0)) == NULL)
-		errx(1, "BZ2_bzReadOpen, bz2err = %d", ebz2err);
+	{
+		fprintf(stderr, "BZ2_bzReadOpen, bz2err = %d\n", ebz2err);
+		exit(1);
+	}
 
 	if (((fd = open(argv[1], O_RDONLY, 0)) < 0) ||
 		((oldsize = lseek(fd, 0, SEEK_END)) == -1) ||
@@ -144,11 +199,12 @@ int main(int argc, char *argv[])
 		(read(fd, old, oldsize) != oldsize) ||
 		(close(fd) == -1))
 	{
-		err(1,"%s",argv[1]);
+		fprintf(stderr, "%s\n", argv[1]);
+		exit(1);
 	}
 
 	if ((new = malloc(newsize + 1)) == NULL)
-		err(1,NULL);
+		exit(1);
 
 	oldpos = 0;
 	newpos = 0;
@@ -161,20 +217,29 @@ int main(int argc, char *argv[])
 
 			if ((lenread < 8) || ((cbz2err != BZ_OK) &&
 			    (cbz2err != BZ_STREAM_END)))
-				errx(1, "Corrupt patch\n");
+			{
+				fprintf(stderr, "Corrupt patch\n");
+				exit(1);
+			}
 
 			ctrl[i]=offtin(buf);
 		}
 
 		/* Sanity-check */
 		if (newpos + ctrl[0] > newsize)
-			errx(1, "Corrupt patch\n");
+		{
+			fprintf(stderr, "Corrupt patch\n");
+			exit(1);
+		}
 
 		/* Read diff string */
 		lenread = BZ2_bzRead(&dbz2err, dpfbz2, new + newpos, ctrl[0]);
 		if ((lenread < ctrl[0]) ||
 		    ((dbz2err != BZ_OK) && (dbz2err != BZ_STREAM_END)))
-			errx(1, "Corrupt patch\n");
+		{
+			fprintf(stderr, "Corrupt patch\n");
+			exit(1);
+		}
 
 		/* Add old data to diff string */
 		for (i=0; i < ctrl[0]; i++)
@@ -187,13 +252,19 @@ int main(int argc, char *argv[])
 
 		/* Sanity-check */
 		if (newpos + ctrl[1] > newsize)
-			errx(1, "Corrupt patch\n");
+		{
+			fprintf(stderr, "Corrupt patch\n");
+			exit(1);
+		}
 
 		/* Read extra string */
 		lenread = BZ2_bzRead(&ebz2err, epfbz2, new + newpos, ctrl[1]);
 		if ((lenread < ctrl[1]) ||
 		    ((ebz2err != BZ_OK) && (ebz2err != BZ_STREAM_END)))
-			errx(1, "Corrupt patch\n");
+		{
+			fprintf(stderr, "Corrupt patch\n");
+			exit(1);
+		}
 
 		/* Adjust pointers */
 		newpos += ctrl[1];
@@ -205,12 +276,18 @@ int main(int argc, char *argv[])
 	BZ2_bzReadClose(&dbz2err, dpfbz2);
 	BZ2_bzReadClose(&ebz2err, epfbz2);
 	if (fclose(cpf) || fclose(dpf) || fclose(epf))
-		err(1, "fclose(%s)", argv[3]);
+	{
+		fprintf(stderr, "fclose(%s)\n", argv[3]);
+		exit(1);
+	}
 
 	/* Write the new file */
 	if (((fd = open(argv[2], O_CREAT|O_TRUNC|O_WRONLY, 0666)) < 0) ||
 		(write(fd, new, newsize) != newsize) || (close(fd) == -1))
-		err(1,"%s",argv[2]);
+	{
+		fprintf(stderr, "%s\n", argv[2]);
+		exit(1);
+	}
 
 	free(new);
 	free(old);
