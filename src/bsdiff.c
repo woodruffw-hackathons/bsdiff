@@ -147,10 +147,13 @@ static void qsufsort(off_t *I, off_t *V, uint8_t *old, off_t oldsize)
 
 	for (i = 0; i < 256; i++)
 		buckets[i] = 0;
+
 	for (i = 0;i < oldsize; i++)
 		buckets[old[i]]++;
+
 	for (i = 1;i < 256; i++)
 		buckets[i] += buckets[i - 1];
+
 	for (i = 255; i > 0; i--)
 		buckets[i] = buckets[i - 1];
 
@@ -167,8 +170,10 @@ static void qsufsort(off_t *I, off_t *V, uint8_t *old, off_t oldsize)
 	V[oldsize] = 0;
 
 	for (i = 1; i < 256; i++)
-		if (buckets[i] == buckets[i - 1] +1)
+	{
+		if (buckets[i] == buckets[i - 1] + 1)
 			I[buckets[i]] = -1;
+	}
 
 	I[0] = -1;
 
@@ -208,8 +213,10 @@ static off_t matchlen(uint8_t *old, off_t oldsize, uint8_t *new, off_t newsize)
 	off_t i;
 
 	for (i = 0; (i < oldsize) && (i < newsize); i++)
+	{
 		if (old[i] != new[i])
 			break;
+	}
 
 	return i;
 }
@@ -403,12 +410,13 @@ int main(int argc, char *argv[])
 
 		for (scsc = (scan += len); scan < newsize; scan++)
 		{
-			len = search(I, old, oldsize, new+scan, newsize-scan, 0, oldsize, &pos);
+			len = search(I, old, oldsize, new+scan,
+						newsize-scan, 0, oldsize, &pos);
 
 			for (; scsc < scan+len; scsc++)
 			{
 				if ((scsc + lastoffset < oldsize) &&
-				(old[scsc + lastoffset] == new[scsc]))
+					(old[scsc + lastoffset] == new[scsc]))
 				{
 					oldscore++;
 				}
@@ -466,10 +474,11 @@ int main(int argc, char *argv[])
 				s = 0;
 				Ss = 0;
 				lens = 0;
+
 				for (i = 0; i < overlap; i++)
 				{
-					if (new[lastscan + lenf - overlap + i] ==
-					   old[lastpos + lenf - overlap + i])
+					if (new[lastscan + lenf - overlap + i] 
+						== old[lastpos + lenf - overlap + i])
 					{
 						s++;
 					}
@@ -490,6 +499,7 @@ int main(int argc, char *argv[])
 
 			for (i = 0; i < lenf; i++)
 				db[dblen + i] = new[lastscan + i] - old[lastpos + i];
+
 			for (i = 0; i < (scan - lenb) - (lastscan + lenf); i++)
 				eb[eblen + i] = new[lastscan + lenf + i];
 
